@@ -1,7 +1,7 @@
 # ISKOLLECT PROJECT STRUCTURE
 
 ## REPOSITORY STRUCTURE
-
+```
 iskollect/
 ├── src/com/iskollect/
 │   ├── model/                         # domain POJOs
@@ -64,7 +64,7 @@ iskollect/
 ├── pom.xml
 ├── .gitignore
 └── README.md
-
+```
 ## LEGEND
 
 [READY] = Built and functional
