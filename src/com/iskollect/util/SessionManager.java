@@ -20,6 +20,10 @@ public class SessionManager {
         return loggedInStudent;
     }
 
+    public static Student getCurrentStudent() {
+        return getSession();
+    }
+
     public static void clearSession() {
         loggedInStudent = null;
     }

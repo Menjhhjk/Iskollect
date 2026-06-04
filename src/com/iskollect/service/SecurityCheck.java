@@ -1,21 +1,22 @@
 package com.iskollect.service;
 
 import com.iskollect.exception.DatabaseException;
-import com.iskollect.exception.DuplicateLogException;
 import com.iskollect.model.Student;
 import com.iskollect.dao.StudentDAO;
 import com.iskollect.util.SessionManager;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+
 public class SecurityCheck {
 
-    private final StudentDAO studentDAO = new StudentDAO();
-    private final InOutService sessionService = new InOutService();
+    private static final int MAX_INACTIVITY_MINUTES = 30;
 
-    //main security check
+    private final StudentDAO studentDAO = new StudentDAO();
+
     public boolean isSessionValid() {
         Student currentStudent = SessionManager.getSession();
 
-        //check if there is a user in the memory
         if (currentStudent == null) {
             System.out.println("[SecurityService] Blocked: No active local session found.");
             return false;
@@ -23,14 +24,12 @@ public class SecurityCheck {
 
         int userId = currentStudent.getUserID();
 
-        //check timeout expiry
-        if (sessionService.isSessionExpired(userId)) {
+        if (isSessionExpired(currentStudent.getLastActivity())) {
             System.out.println("[SecurityService] Blocked: Inactivity idle timeout detected.");
             handleForcedLogout(userId);
             return false;
         }
 
-        //check token
         String localToken = currentStudent.getSessionToken();
         String dbToken = studentDAO.getSessionTokenDB(userId);
 
@@ -39,16 +38,25 @@ public class SecurityCheck {
             handleForcedLogout(userId);
             return false;
         }
+
         try {
-            sessionService.trackActivity(userId);
+            currentStudent.setLastActivity(LocalDateTime.now());
+            studentDAO.updateLastActivity(userId);
             return true;
-        } catch (DuplicateLogException | DatabaseException e) {
-            System.err.println("[SecurityCheck] Error tracking activity: " + e.getMessage());
+        } catch (DatabaseException e) {
+            System.err.println("[SecurityCheck] Error updating activity: " + e.getMessage());
             return false;
         }
     }
 
-    //delete everything
+    private boolean isSessionExpired(LocalDateTime lastActivity) {
+        if (lastActivity == null) {
+            return false;
+        }
+        long minutesIdle = Duration.between(lastActivity, LocalDateTime.now()).toMinutes();
+        return minutesIdle >= MAX_INACTIVITY_MINUTES;
+    }
+
     private void handleForcedLogout(int userId) {
         try {
             studentDAO.updateSessionToken(userId, null);

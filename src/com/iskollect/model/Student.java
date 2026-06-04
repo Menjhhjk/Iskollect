@@ -1,16 +1,23 @@
 package com.iskollect.model;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public class Student {
     private int user_id;
+    private String name;
     private String username;
     private String webmail;
     private String password;
+    private String course;
+    private int year_level;
     private int age;
     private String profile_photo;
     private double total_points;
     private int raw_bottle_count;
+    private int weekly_bottles;
+    private int streak;
+    private LocalDate last_submit_date;
     private String account_status;
     private int failed_login_attempts = 0;
     private String session_token;
@@ -60,6 +67,22 @@ public class Student {
         this.user_id = user_id;
     }
 
+    public int getStudentId() {
+        return user_id;
+    }
+
+    public void setStudentId(int studentId) {
+        this.user_id = studentId;
+    }
+
+    public String getName() {
+        return name != null && !name.isBlank() ? name : username;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
     //username
     public String getUsername() {
         return username;
@@ -82,6 +105,22 @@ public class Student {
     }
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getCourse() {
+        return course;
+    }
+
+    public void setCourse(String course) {
+        this.course = course;
+    }
+
+    public int getYearLevel() {
+        return year_level;
+    }
+
+    public void setYearLevel(int yearLevel) {
+        this.year_level = yearLevel;
     }
 
     //age
@@ -114,6 +153,30 @@ public class Student {
     }
     public void setRawBottleCount(int raw_bottle_count) {
         this.raw_bottle_count = raw_bottle_count;
+    }
+
+    public int getWeeklyBottles() {
+        return weekly_bottles;
+    }
+
+    public void setWeeklyBottles(int weeklyBottles) {
+        this.weekly_bottles = weeklyBottles;
+    }
+
+    public int getStreak() {
+        return streak;
+    }
+
+    public void setStreak(int streak) {
+        this.streak = streak;
+    }
+
+    public LocalDate getLastSubmitDate() {
+        return last_submit_date;
+    }
+
+    public void setLastSubmitDate(LocalDate lastSubmitDate) {
+        this.last_submit_date = lastSubmitDate;
     }
 
     //account status
