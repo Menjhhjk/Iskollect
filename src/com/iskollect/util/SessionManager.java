@@ -3,30 +3,24 @@ package com.iskollect.util;
 import com.iskollect.model.Student;
 
 public class SessionManager {
-    private static final SessionManager INSTANCE = new SessionManager();
-    private static Student currentStudent;
+    private static Student loggedInStudent;
 
-    private SessionManager() {
+    public static void setSession(Student student) {
+        if (student != null) {
+            //generates session token
+            String token = java.util.UUID.randomUUID().toString();
+            student.setSessionToken(token);
+        }
+
+        loggedInStudent = student;
     }
 
-    public static SessionManager getInstance() {
-        return INSTANCE;
-    }
-
-    public static void setCurrentStudent(Student s) {
-        currentStudent = s;
-    }
-
-    public static Student getCurrentStudent() {
-        // DEPENDS ON: registration module
-        return currentStudent;
+    //getters and setters
+    public static Student getSession() {
+        return loggedInStudent;
     }
 
     public static void clearSession() {
-        currentStudent = null;
-    }
-
-    public static boolean isLoggedIn() {
-        return currentStudent != null;
+        loggedInStudent = null;
     }
 }

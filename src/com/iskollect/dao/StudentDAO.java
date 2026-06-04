@@ -3,198 +3,111 @@ package com.iskollect.dao;
 import com.iskollect.exception.DatabaseException;
 import com.iskollect.model.Student;
 import com.iskollect.util.DBConnection;
-
-import java.sql.Connection;
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
+import com.iskollect.util.PasswordUtil;
+import java.sql.*;
 
 public class StudentDAO {
-    private Connection conn() {
-        return DBConnection.getInstance().getConnection();
+
+    //register user
+    public boolean registerStudent(Student student) throws DatabaseException {
+        String register_query = "INSERT INTO users (username, webmail, password) VALUES (?, ?, ?);";
+
+        try (Connection conn = DBConnection.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement(register_query, Statement.RETURN_GENERATED_KEYS)) {
+
+            ps.setString(1, student.getUsername());
+            ps.setString(2, student.getWebmail());
+            String hashedPassword = PasswordUtil.hashPassword(student.getPassword());
+            ps.setString(3,hashedPassword);
+
+            int affectedRows = ps.executeUpdate();
+
+            if (affectedRows > 0) {
+                try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        student.setUserID(generatedKeys.getInt(1));
+                    }
+                }
+                System.out.println("Student registered successfully with ID: " + student.getUserID());
+                return true;
+            }
+            return false;
+        } catch (SQLException e) {
+            throw new DatabaseException("Failed to execute registration insertion on Supabase server.", e);
+        }
     }
 
-    public boolean insert(Student s) throws DatabaseException {
-        String sql = "INSERT INTO students (name, course, year_level, total_points, email, password_hash) "
-                + "VALUES (?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement ps = conn().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setString(1, s.getName());
-            ps.setString(2, s.getCourse());
-            ps.setInt(3, s.getYearLevel());
-            ps.setDouble(4, s.getTotalPoints());
-            ps.setString(5, s.getEmail());
-            ps.setString(6, s.getPasswordHash());
-            boolean inserted = ps.executeUpdate() > 0;
-            try (ResultSet keys = ps.getGeneratedKeys()) {
-                if (keys.next()) {
-                    s.setStudentId(keys.getInt(1));
+    //search for user's webmail to match inputted webmail and password
+    public Student searchStudent(String webmail) throws DatabaseException {
+        String query = "SELECT * FROM users WHERE LOWER(webmail) = LOWER(?)";
+
+        Student fullStudent = null;
+
+        try (Connection conn = DBConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+
+            pstmt.setString(1, webmail);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+
+                    fullStudent = new Student();
+
+                    fullStudent.setUserID(rs.getInt("user_id"));
+                    fullStudent.setUsername(rs.getString("username"));
+                    fullStudent.setWebmail(rs.getString("webmail"));
+                    fullStudent.setPassword(rs.getString("password"));
+                    fullStudent.setAge(rs.getInt("age"));
+                    fullStudent.setProfilePhoto(rs.getString("profile_photo"));
+                    fullStudent.setTotalPoints(rs.getInt("total_points"));
+                    fullStudent.setRawBottleCount(rs.getInt("raw_bottle_count"));
+                    fullStudent.setAccountStatus(rs.getString("account_status"));
+                    fullStudent.setFailedLoginAttempts(rs.getInt("failed_login_attempts"));
+                    fullStudent.setSessionToken(rs.getString("session_token"));
+
+                    java.sql.Timestamp activityTimestamp = rs.getTimestamp("last_activity");
+                    if (activityTimestamp != null) {
+                        fullStudent.setLastActivity(activityTimestamp.toLocalDateTime());
+                    }
                 }
             }
-            return inserted;
         } catch (SQLException e) {
-            throw new DatabaseException("Failed to insert student.", e);
+            throw new DatabaseException("Failed to search student credential.", e);
         }
+
+        return fullStudent;
     }
 
-    public Student findByEmail(String email) throws DatabaseException {
-        String sql = "SELECT * FROM students WHERE email = ?";
-        try (PreparedStatement ps = conn().prepareStatement(sql)) {
-            ps.setString(1, email);
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next() ? map(rs) : null;
+    //get the user's token
+    public String getSessionTokenDB(int studentId) {
+        String query = "SELECT session_token FROM users WHERE user_id = ?";
+
+        try (Connection conn = DBConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+
+            pstmt.setInt(1, studentId);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("session_token");
+                }
             }
         } catch (SQLException e) {
-            throw new DatabaseException("Failed to find student by email.", e);
+            throw new RuntimeException("Error verifying token against database.", e);
         }
+        return null;
     }
 
-    public Student findById(int studentId) throws DatabaseException {
-        String sql = "SELECT * FROM students WHERE student_id = ?";
-        try (PreparedStatement ps = conn().prepareStatement(sql)) {
-            ps.setInt(1, studentId);
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next() ? map(rs) : null;
-            }
+    //update the user's token
+    public void updateSessionToken(int studentId, String token) throws DatabaseException {
+        String query = "UPDATE users SET session_token = ? WHERE user_id = ?";
+        try (Connection conn = DBConnection.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+            pstmt.setString(1, token);
+            pstmt.setInt(2, studentId);
+            pstmt.executeUpdate();
         } catch (SQLException e) {
-            throw new DatabaseException("Failed to find student by ID " + studentId, e);
-        }
-    }
-
-    public void updatePoints(int studentId, double points) throws DatabaseException {
-        String sql = "UPDATE students SET total_points = ? WHERE student_id = ?";
-        try (PreparedStatement ps = conn().prepareStatement(sql)) {
-            ps.setDouble(1, points);
-            ps.setInt(2, studentId);
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            throw new DatabaseException("Failed to update points for student " + studentId, e);
-        }
-    }
-
-    public boolean deductPointsAtomic(int studentId, double amount) throws DatabaseException {
-        String sql = "UPDATE students SET total_points = total_points - ? "
-                + "WHERE student_id = ? AND total_points >= ?";
-        try (PreparedStatement ps = conn().prepareStatement(sql)) {
-            ps.setDouble(1, amount);
-            ps.setInt(2, studentId);
-            ps.setDouble(3, amount);
-            return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            throw new DatabaseException("Failed to deduct points for student " + studentId, e);
-        }
-    }
-
-    public void updateWeeklyStats(int studentId, int weeklyBottles, int streak, java.time.LocalDate lastDate)
-            throws DatabaseException {
-        String sql = "UPDATE students SET weekly_bottles = ?, streak = ?, last_submit_date = ? WHERE student_id = ?";
-        try (PreparedStatement ps = conn().prepareStatement(sql)) {
-            ps.setInt(1, weeklyBottles);
-            ps.setInt(2, streak);
-            if (lastDate == null) {
-                ps.setNull(3, java.sql.Types.DATE);
-            } else {
-                ps.setDate(3, Date.valueOf(lastDate));
-            }
-            ps.setInt(4, studentId);
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            throw new DatabaseException("Failed to update weekly stats for student " + studentId, e);
-        }
-    }
-
-    public void updateProfile(int studentId, String name, String course, int yearLevel) throws DatabaseException {
-        String sql = "UPDATE students SET name = ?, course = ?, year_level = ? WHERE student_id = ?";
-        try (PreparedStatement ps = conn().prepareStatement(sql)) {
-            ps.setString(1, name);
-            ps.setString(2, course);
-            ps.setInt(3, yearLevel);
-            ps.setInt(4, studentId);
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            throw new DatabaseException("Failed to update profile for student " + studentId, e);
-        }
-    }
-
-    public void resetWeeklyStats(int studentId) throws DatabaseException {
-        String sql = "UPDATE students SET weekly_bottles = 0, streak = 0, last_submit_date = NULL WHERE student_id = ?";
-        try (PreparedStatement ps = conn().prepareStatement(sql)) {
-            ps.setInt(1, studentId);
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            throw new DatabaseException("Failed to reset weekly stats for student " + studentId, e);
-        }
-    }
-
-    public void incrementFailedAttempts(String email) throws DatabaseException {
-        String sql = "UPDATE students SET failed_attempts = failed_attempts + 1 WHERE email = ?";
-        try (PreparedStatement ps = conn().prepareStatement(sql)) {
-            ps.setString(1, email);
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            throw new DatabaseException("Failed to increment failed attempts.", e);
-        }
-    }
-
-    public void lockAccount(String email) throws DatabaseException {
-        String sql = "UPDATE students SET is_locked = TRUE WHERE email = ?";
-        try (PreparedStatement ps = conn().prepareStatement(sql)) {
-            ps.setString(1, email);
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            throw new DatabaseException("Failed to lock account.", e);
-        }
-    }
-
-    public List<Integer> getAllStudentIds() throws DatabaseException {
-        String sql = "SELECT student_id FROM students ORDER BY student_id";
-        List<Integer> ids = new ArrayList<>();
-        try (PreparedStatement ps = conn().prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                ids.add(rs.getInt("student_id"));
-            }
-            return ids;
-        } catch (SQLException e) {
-            throw new DatabaseException("Failed to fetch all student IDs.", e);
-        }
-    }
-
-    private Student map(ResultSet rs) throws SQLException {
-        Date lastDate = rs.getDate("last_submit_date");
-        Student student = new Student(
-                rs.getInt("student_id"),
-                rs.getString("name"),
-                rs.getString("course"),
-                rs.getInt("year_level"),
-                rs.getDouble("total_points"),
-                rs.getString("email"),
-                rs.getString("password_hash"),
-                rs.getInt("streak"),
-                rs.getInt("weekly_bottles"),
-                lastDate == null ? null : lastDate.toLocalDate()
-        );
-        student.setFailedAttempts(readInt(rs, "failed_attempts"));
-        student.setLocked(readBoolean(rs, "is_locked"));
-        return student;
-    }
-
-    private int readInt(ResultSet rs, String column) {
-        try {
-            return rs.getInt(column);
-        } catch (SQLException e) {
-            return 0;
-        }
-    }
-
-    private boolean readBoolean(ResultSet rs, String column) {
-        try {
-            return rs.getBoolean(column);
-        } catch (SQLException e) {
-            return false;
+            throw new DatabaseException("Failed to update token in database.", e);
         }
     }
 }
