@@ -22,11 +22,11 @@ import java.util.List;
  * ── DDL (run once to create the table) ────────────────────────────────
  *
  *   CREATE TABLE inout_logs (
- *       log_id       INT           NOT NULL AUTO_INCREMENT,
+ *       log_id       INTEGER       GENERATED ALWAYS AS IDENTITY,
  *       student_id   INT           NOT NULL,
  *       event_type   VARCHAR(10)   NOT NULL,   -- 'INGRESS' | 'EGRESS'
  *       entry_method VARCHAR(20)   NOT NULL,   -- 'MANUAL'
- *       timestamp    DATETIME      NOT NULL,
+ *       timestamp    TIMESTAMP     NOT NULL,
  *       staff_note   TEXT          NULL,
  *       status       VARCHAR(20)   NOT NULL,   -- 'VALID' | 'DUPLICATE' | 'UNRESOLVED'
  *       PRIMARY KEY (log_id)
@@ -55,7 +55,7 @@ public class InOutLogDAO {
         "SELECT * FROM inout_logs ORDER BY timestamp DESC";
 
     private static final String SQL_GET_BY_DATE_RANGE =
-        "SELECT * FROM inout_logs WHERE student_id = ? AND DATE(timestamp) BETWEEN ? AND ? " +
+        "SELECT * FROM inout_logs WHERE student_id = ? AND timestamp::date BETWEEN ? AND ? " +
         "ORDER BY timestamp DESC";
 
     private static final String SQL_GET_LAST_EVENT =
@@ -75,10 +75,10 @@ public class InOutLogDAO {
         "UPDATE inout_logs SET status = ? WHERE log_id = ?";
 
     private static final String SQL_COUNT_BY_DATE =
-        "SELECT COUNT(*) FROM inout_logs WHERE DATE(timestamp) = ?";
+        "SELECT COUNT(*) FROM inout_logs WHERE timestamp::date = ?";
 
     private static final String SQL_GET_BY_DATE =
-        "SELECT * FROM inout_logs WHERE DATE(timestamp) = ? ORDER BY timestamp DESC";
+        "SELECT * FROM inout_logs WHERE timestamp::date = ? ORDER BY timestamp DESC";
 
     // ── Connection helper ─────────────────────────────────────────────────
 

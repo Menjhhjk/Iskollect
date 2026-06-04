@@ -14,9 +14,16 @@ import java.util.Properties;
  * Reconnects automatically if the stored connection has gone stale.
  *
  * config.properties keys:
- *   db.url      = jdbc:mysql://localhost:3306/iskollect_db?useSSL=false&serverTimezone=Asia/Manila
+ *   db.url      = jdbc:postgresql://localhost:5432/iskollect_db
  *   db.user     = <username>
  *   db.password = <password>
+ *
+ * Maven dependency (pom.xml):
+ *   <dependency>
+ *       <groupId>org.postgresql</groupId>
+ *       <artifactId>postgresql</artifactId>
+ *       <version>42.7.3</version>
+ *   </dependency>
  */
 public class DBConnection {
 
@@ -24,10 +31,13 @@ public class DBConnection {
     private Connection connection;
 
     // ── Properties keys ───────────────────────────────────────────────────
-    private static final String CONFIG_FILE = "config.properties";
-    private static final String KEY_URL     = "db.url";
-    private static final String KEY_USER    = "db.user";
-    private static final String KEY_PASS    = "db.password";
+    private static final String CONFIG_FILE  = "config.properties";
+    private static final String KEY_URL      = "db.url";
+    private static final String KEY_USER     = "db.user";
+    private static final String KEY_PASS     = "db.password";
+
+    // ── PostgreSQL driver class ───────────────────────────────────────────
+    private static final String PG_DRIVER    = "org.postgresql.Driver";
 
     // ── Private constructor (Singleton) ───────────────────────────────────
 
@@ -38,15 +48,18 @@ public class DBConnection {
             String user = props.getProperty(KEY_USER);
             String pass = props.getProperty(KEY_PASS);
 
-            Class.forName("com.mysql.cj.jdbc.Driver");
+            Class.forName(PG_DRIVER);
             this.connection = DriverManager.getConnection(url, user, pass);
 
         } catch (ClassNotFoundException e) {
-            throw new RuntimeException("MySQL JDBC driver not found. Add mysql-connector-j to classpath.", e);
+            throw new RuntimeException(
+                "PostgreSQL JDBC driver not found. Add org.postgresql:postgresql to pom.xml.", e);
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to connect to the database. Check config.properties.", e);
+            throw new RuntimeException(
+                "Failed to connect to the database. Check config.properties.", e);
         } catch (IOException e) {
-            throw new RuntimeException("config.properties not found on classpath.", e);
+            throw new RuntimeException(
+                "config.properties not found on classpath.", e);
         }
     }
 

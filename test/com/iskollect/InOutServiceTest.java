@@ -1,4 +1,4 @@
-package test.com.iskollect;
+package com.iskollect;
 
 public class InOutServiceTest {
     
