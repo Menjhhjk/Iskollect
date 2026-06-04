@@ -50,74 +50,68 @@ The schema uses PostgreSQL-compatible features such as:
 
 ## Project Structure
 
+Each Java file is annotated with the module or concern it belongs to.
+
 ```text
 Iskollect/
-├── pom.xml
-├── README.md
-├── SESSION_UPDATES.md
-├── resources/
-│   └── config.properties
-├── sql/
-│   ├── 00_create_core_schema_postgresql.sql
-│   └── 01_create_inout_logs.sql
-│
-├── src/com/iskollect/
-│   ├── controller/
-│   │   ├── BottleSubmitController.java       [Bottle Submission and Points]
-│   │   ├── DashboardController.java          [Reports]
-│   │   ├── InOutController.java              [Ingress and Egress Logging]
-│   │   ├── ProfileController.java            [Bottle Submission and Points]
-│   │   ├── RedeemController.java             [Rewards and Redemption]
-│   │   ├── RewardsController.java            [Rewards and Redemption]
-│   │   └── TransactionController.java        [Transaction History]
-│   │
-│   ├── dao/
-│   │   ├── InOutLogDAO.java                  [Ingress and Egress Logging]
-│   │   ├── RedeemedRewardDAO.java            [Rewards and Redemption]
-│   │   ├── RewardDAO.java                    [Rewards and Redemption]
-│   │   ├── StudentDAO.java                   [Bottle Submission and Points]
-│   │   └── TransactionDAO.java               [Transaction History]
-│   │
-│   ├── exception/
-│   │   ├── AuthException.java                [Future Authentication Module]
-│   │   ├── DatabaseException.java            [Shared Infrastructure]
-│   │   ├── DuplicateLogException.java        [Ingress and Egress Logging]
-│   │   ├── InsufficientPointsException.java  [Rewards and Redemption]
-│   │   └── InvalidInputException.java        [Shared Infrastructure]
-│   │
-│   ├── model/
-│   │   ├── InOutLog.java                     [Ingress and Egress Logging]
-│   │   ├── LogResult.java                    [Ingress and Egress Logging]
-│   │   ├── RedeemedReward.java               [Rewards and Redemption]
-│   │   ├── RedeemResult.java                 [Rewards and Redemption]
-│   │   ├── ReportResult.java                 [Reports]
-│   │   ├── Reward.java                       [Rewards and Redemption]
-│   │   ├── Student.java                      [Bottle Submission and Points]
-│   │   ├── SubmitResult.java                 [Bottle Submission and Points]
-│   │   ├── Transaction.java                  [Transaction History]
-│   │   └── TransactionHistory.java           [Transaction History]
-│   │
-│   ├── scheduler/
-│   │   └── WeeklyResetScheduler.java         [Weekly Reset]
-│   │
-│   ├── service/
-│   │   ├── BadgeService.java                 [Bottle Submission and Points]
-│   │   ├── BottleService.java                [Bottle Submission and Points]
-│   │   ├── InOutService.java                 [Ingress and Egress Logging]
-│   │   ├── PointsService.java                [Bottle Submission and Points]
-│   │   ├── ReportService.java                [Reports]
-│   │   ├── RewardService.java                [Rewards and Redemption]
-│   │   ├── StreakService.java                [Bottle Submission and Points]
-│   │   └── TransactionService.java           [Transaction History]
-│   │
-│   └── util/
-│       ├── CouponGenerator.java              [Rewards and Redemption]
-│       ├── DBConnection.java                 [Shared Infrastructure]
-│       ├── SessionManager.java               [Future Authentication Module]
-│       └── StudentValidator.java             [Bottle Submission and Points]
-│
-└── test/com/iskollect/
-    └── InOutServiceTest.java
+|-- pom.xml                                      [Build Configuration]
+|-- README.md                                    [Project Documentation]
+|-- SESSION_UPDATES.md                           [Advisor Session Documentation]
+|-- resources/
+|   `-- config.properties                        [Database Configuration]
+|-- sql/
+|   |-- 00_create_core_schema_postgresql.sql     [PostgreSQL Schema]
+|   `-- 01_create_inout_logs.sql                 [Ingress and Egress Logging]
+|-- src/com/iskollect/
+|   |-- controller/
+|   |   |-- BottleSubmitController.java          [Bottle Submission and Points]
+|   |   |-- DashboardController.java             [Dashboard]
+|   |   |-- InOutController.java                 [Ingress and Egress Logging]
+|   |   |-- ProfileController.java               [Student Profile]
+|   |   |-- RedeemController.java                [Rewards and Redemption]
+|   |   |-- RewardsController.java               [Rewards and Redemption]
+|   |   `-- TransactionController.java           [Transaction History]
+|   |-- dao/
+|   |   |-- InOutLogDAO.java                     [Ingress and Egress Logging]
+|   |   |-- RedeemedRewardDAO.java               [Rewards and Redemption]
+|   |   |-- RewardDAO.java                       [Rewards and Redemption]
+|   |   |-- StudentDAO.java                      [Student Profile, Bottle Submission and Points]
+|   |   `-- TransactionDAO.java                  [Bottle Submission and Points, Transaction History]
+|   |-- exception/
+|   |   |-- AuthException.java                   [Future Authentication Module]
+|   |   |-- DatabaseException.java               [Shared Infrastructure]
+|   |   |-- DuplicateLogException.java           [Ingress and Egress Logging]
+|   |   |-- InsufficientPointsException.java     [Rewards and Redemption]
+|   |   `-- InvalidInputException.java           [Shared Infrastructure, Reports]
+|   |-- model/
+|   |   |-- InOutLog.java                        [Ingress and Egress Logging]
+|   |   |-- LogResult.java                       [Ingress and Egress Logging]
+|   |   |-- RedeemedReward.java                  [Rewards and Redemption]
+|   |   |-- RedeemResult.java                    [Rewards and Redemption]
+|   |   |-- ReportResult.java                    [Reports]
+|   |   |-- Reward.java                          [Rewards and Redemption]
+|   |   |-- Student.java                         [Student Profile, Bottle Submission and Points]
+|   |   |-- SubmitResult.java                    [Bottle Submission and Points]
+|   |   |-- Transaction.java                     [Bottle Submission and Points, Transaction History]
+|   |   `-- TransactionHistory.java              [Transaction History]
+|   |-- scheduler/
+|   |   `-- WeeklyResetScheduler.java            [Weekly Reset]
+|   |-- service/
+|   |   |-- BadgeService.java                    [Bottle Submission and Points]
+|   |   |-- BottleService.java                   [Bottle Submission and Points]
+|   |   |-- InOutService.java                    [Ingress and Egress Logging]
+|   |   |-- PointsService.java                   [Bottle Submission and Points]
+|   |   |-- ReportService.java                   [Reports]
+|   |   |-- RewardService.java                   [Rewards and Redemption]
+|   |   |-- StreakService.java                   [Bottle Submission and Points]
+|   |   `-- TransactionService.java              [Transaction History]
+|   `-- util/
+|       |-- CouponGenerator.java                 [Rewards and Redemption]
+|       |-- DBConnection.java                    [Shared Infrastructure]
+|       |-- SessionManager.java                  [Session Management, Future Authentication Module]
+|       `-- StudentValidator.java                [Ingress and Egress Logging, Future Registration Module]
+`-- test/com/iskollect/
+    `-- InOutServiceTest.java                    [Ingress and Egress Logging Tests]
 ```
 
 ## Implemented Modules
@@ -206,3 +200,11 @@ Then reload the window and allow Maven dependencies to be imported.
 - `StudentValidator` remains a stub and currently returns `true`.
 - JavaFX FXML files are expected to be wired separately to the controller fields and methods.
 - `resources/config.properties` may need local database credentials before running the application.
+
+## Advisor Session Notes
+
+A focused advisor-readable summary of the latest development session is available in:
+
+```text
+SESSION_UPDATES.md
+```
