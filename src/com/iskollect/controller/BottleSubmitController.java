@@ -1,6 +1,6 @@
 package com.iskollect.controller;
 
-import com.iskollect.model.Student;
+import com.iskollect.model.User;
 import com.iskollect.model.SubmitResult;
 import com.iskollect.service.BottleService;
 import com.iskollect.util.SessionManager;
@@ -16,14 +16,14 @@ public class BottleSubmitController {
 
     @FXML
     public void submitBottles() {
-        Student student = SessionManager.getCurrentStudent();
-        if (student == null) {
+        User user = SessionManager.getCurrentUser();
+        if (user == null) {
             setStatus("Please log in first.");
             return;
         }
         try {
             int bottles = Integer.parseInt(bottleCountField.getText().trim());
-            SubmitResult result = bottleService.submitBottles(student.getStudentId(), bottles);
+            SubmitResult result = bottleService.submitBottles(user.getUserId(), bottles);
             if (result.isSuccess()) {
                 setStatus("Earned " + result.getTotalPoints() + " pts. Badge: " + result.getNewBadgeTier());
             } else {

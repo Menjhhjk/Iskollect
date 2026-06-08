@@ -2,9 +2,9 @@ package com.iskollect.model;
 
 import java.time.LocalDate;
 
-public class Transaction {
-    private int transId;
-    private int studentId;
+public class BottleRecord {
+    private int recordId;
+    private int userId;
     private int bottles;
     private double basePoints;
     private double streakBonus;
@@ -12,13 +12,13 @@ public class Transaction {
     private double points;
     private LocalDate date;
 
-    public Transaction() {
+    public BottleRecord() {
     }
 
-    public Transaction(int transId, int studentId, int bottles, double basePoints,
+    public BottleRecord(int recordId, int userId, int bottles, double basePoints,
                        double streakBonus, double badgeBonus, double points, LocalDate date) {
-        this.transId = transId;
-        this.studentId = studentId;
+        this.recordId = recordId;
+        this.userId = userId;
         this.bottles = bottles;
         this.basePoints = basePoints;
         this.streakBonus = streakBonus;
@@ -27,10 +27,10 @@ public class Transaction {
         this.date = date;
     }
 
-    public int getTransId() { return transId; }
-    public void setTransId(int transId) { this.transId = transId; }
-    public int getStudentId() { return studentId; }
-    public void setStudentId(int studentId) { this.studentId = studentId; }
+    public int getRecordId() { return recordId; }
+    public void setRecordId(int recordId) { this.recordId = recordId; }
+    public int getUserId() { return userId; }
+    public void setUserId(int userId) { this.userId = userId; }
     public int getBottles() { return bottles; }
     public void setBottles(int bottles) { this.bottles = bottles; }
     public double getBasePoints() { return basePoints; }
@@ -46,7 +46,7 @@ public class Transaction {
 
     @Override
     public String toString() {
-        return "Transaction{transId=" + transId + ", studentId=" + studentId + ", bottles="
+        return "BottleRecord{recordId=" + recordId + ", userId=" + userId + ", bottles="
                 + bottles + ", basePoints=" + basePoints + ", streakBonus=" + streakBonus
                 + ", badgeBonus=" + badgeBonus + ", points=" + points + ", date=" + date + "}";
     }

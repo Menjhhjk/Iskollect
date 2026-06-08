@@ -1,55 +1,58 @@
 package com.iskollect.service;
 
-import com.iskollect.dao.StudentDAO;
-import com.iskollect.dao.TransactionDAO;
+import com.iskollect.dao.UserDAO;
+import com.iskollect.dao.BottleRecordDAO;
+import com.iskollect.dao.PointsLedgerDAO;
 import com.iskollect.exception.DatabaseException;
-import com.iskollect.model.Student;
+import com.iskollect.model.User;
 
 public class PointsService {
-    private final StudentDAO studentDAO;
-    private final TransactionDAO transactionDAO;
+    private final UserDAO userDAO;
+    private final BottleRecordDAO bottleRecordDAO;
+    private final PointsLedgerDAO pointsLedgerDAO;
 
     public PointsService() {
-        this(new StudentDAO(), new TransactionDAO());
+        this(new UserDAO(), new BottleRecordDAO());
     }
 
-    public PointsService(StudentDAO studentDAO, TransactionDAO transactionDAO) {
-        this.studentDAO = studentDAO;
-        this.transactionDAO = transactionDAO;
+    public PointsService(UserDAO userDAO, BottleRecordDAO bottleRecordDAO) {
+        this.userDAO = userDAO;
+        this.bottleRecordDAO = bottleRecordDAO;
+        this.pointsLedgerDAO = new PointsLedgerDAO();
     }
 
     public double calculateBasePoints(int bottles) {
         return bottles * 0.5;
     }
 
-    public double getTotalPoints(int studentId) {
+    public double getTotalPoints(int userId) {
         try {
-            Student student = studentDAO.findById(studentId);
-            return student == null ? 0 : student.getTotalPoints();
+            User user = userDAO.findById(userId);
+            return user == null ? 0 : user.getTotalPoints();
         } catch (DatabaseException e) {
             return 0;
         }
     }
 
-    public boolean deductPoints(int studentId, double amount) {
+    public boolean deductPoints(int userId, double amount) {
         if (amount < 0) {
             return false;
         }
         try {
-            return studentDAO.deductPointsAtomic(studentId, amount);
+            return userDAO.deductPointsAtomic(userId, amount);
         } catch (DatabaseException e) {
             return false;
         }
     }
 
-    public void recalculatePoints(int studentId) {
+    public void recalculatePoints(int userId) {
         try {
-            Student student = studentDAO.findById(studentId);
-            if (student == null) {
+            User user = userDAO.findById(userId);
+            if (user == null) {
                 return;
             }
-            double earned = transactionDAO.getTotalPoints(studentId);
-            studentDAO.updatePoints(studentId, earned);
+            double balance = pointsLedgerDAO.getBalance(userId);
+            userDAO.updatePoints(userId, balance);
         } catch (DatabaseException e) {
             System.err.println("recalculatePoints failed: " + e.getMessage());
         }

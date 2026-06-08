@@ -12,8 +12,8 @@ public class LogResult {
     public enum Outcome {
         SUCCESS,       // Event recorded normally
         DUPLICATE,     // Same event type already logged within the duplicate window
-        STUDENT_NOT_FOUND, // student_id has no matching record (stub: always bypassed until registration module)
-        INVALID_INPUT, // studentId <= 0 or eventType is null
+        USER_NOT_FOUND, // user_id has no matching record (stub: always bypassed until registration module)
+        INVALID_INPUT, // userId <= 0 or eventType is null
         DB_ERROR       // Unexpected database failure
     }
 
@@ -37,8 +37,8 @@ public class LogResult {
         return new LogResult(
             Outcome.SUCCESS,
             log,
-            String.format("Logged: Student %d — %s at %s",
-                log.getStudentId(), log.getEventType(), log.getTimestamp())
+            String.format("Logged: User %d — %s at %s",
+                log.getUserId(), log.getEventType(), log.getTimestamp())
         );
     }
 
@@ -46,21 +46,21 @@ public class LogResult {
         return new LogResult(
             Outcome.DUPLICATE,
             existing,
-            String.format("Duplicate: Student %d already has an active %s log (ID %d).",
-                existing.getStudentId(), existing.getEventType(), existing.getLogId())
+            String.format("Duplicate: User %d already has an active %s log (ID %d).",
+                existing.getUserId(), existing.getEventType(), existing.getLogId())
         );
     }
 
-    public static LogResult studentNotFound(int studentId) {
+    public static LogResult userNotFound(int userId) {
         return new LogResult(
-            Outcome.STUDENT_NOT_FOUND,
+            Outcome.USER_NOT_FOUND,
             null,
             // ── STUB NOTE ────────────────────────────────────────────────
             // This outcome is never returned in the current build.
-            // StudentValidator.exists() always returns true until the
-            // Student & Device Registration Module is wired in.
+            // UserValidator.exists() always returns true until the
+            // User & Device Registration Module is wired in.
             // ─────────────────────────────────────────────────────────────
-            "Student ID " + studentId + " not found. Registration module not active."
+            "User ID " + userId + " not found. Registration module not active."
         );
     }
 

@@ -1,8 +1,8 @@
 package com.iskollect.service;
 
 import com.iskollect.exception.DatabaseException;
-import com.iskollect.model.Student;
-import com.iskollect.dao.StudentDAO;
+import com.iskollect.model.User;
+import com.iskollect.dao.UserDAO;
 import com.iskollect.util.SessionManager;
 
 import java.time.Duration;
@@ -12,26 +12,26 @@ public class SecurityCheck {
 
     private static final int MAX_INACTIVITY_MINUTES = 30;
 
-    private final StudentDAO studentDAO = new StudentDAO();
+    private final UserDAO userDAO = new UserDAO();
 
     public boolean isSessionValid() {
-        Student currentStudent = SessionManager.getSession();
+        User currentUser = SessionManager.getSession();
 
-        if (currentStudent == null) {
+        if (currentUser == null) {
             System.out.println("[SecurityService] Blocked: No active local session found.");
             return false;
         }
 
-        int userId = currentStudent.getUserID();
+        int userId = currentUser.getUserId();
 
-        if (isSessionExpired(currentStudent.getLastActivity())) {
+        if (isSessionExpired(currentUser.getLastActivity())) {
             System.out.println("[SecurityService] Blocked: Inactivity idle timeout detected.");
             handleForcedLogout(userId);
             return false;
         }
 
-        String localToken = currentStudent.getSessionToken();
-        String dbToken = studentDAO.getSessionTokenDB(userId);
+        String localToken = currentUser.getSessionToken();
+        String dbToken = userDAO.getSessionTokenDB(userId);
 
         if (dbToken == null || !dbToken.equals(localToken)) {
             System.out.println("[SecurityService] Blocked: Token symmetry mismatch or remote session revoked.");
@@ -40,8 +40,8 @@ public class SecurityCheck {
         }
 
         try {
-            currentStudent.setLastActivity(LocalDateTime.now());
-            studentDAO.updateLastActivity(userId);
+            currentUser.setLastActivity(LocalDateTime.now());
+            userDAO.updateLastActivity(userId);
             return true;
         } catch (DatabaseException e) {
             System.err.println("[SecurityCheck] Error updating activity: " + e.getMessage());
@@ -59,7 +59,7 @@ public class SecurityCheck {
 
     private void handleForcedLogout(int userId) {
         try {
-            studentDAO.updateSessionToken(userId, null);
+            userDAO.updateSessionToken(userId, null);
             System.out.println("[SecurityCheck] Remote session token revoked successfully.");
         } catch (DatabaseException e) {
             System.err.println("[SecurityCheck] Warning: Failed to revoke remote token. " + e.getMessage());

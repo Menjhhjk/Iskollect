@@ -1,32 +1,32 @@
 package com.iskollect.util;
 
 /**
- * STUB — Student & Device Registration Module not yet implemented
+ * STUB — User & Device Registration Module not yet implemented
  *
- * This class stands in for real student existence validation.
+ * This class stands in for real user existence validation.
  * Currently, exists() always returns true so that the Ingress /
  * Egress monitoring logic can run and be tested independently.
  *
- * WHEN the Student & Device Registration Module is ready:
- *  1. Inject or instantiate a real StudentDAO here.
+ * WHEN the User & Device Registration Module is ready:
+ *  1. Inject or instantiate a real UserDAO here.
  *  2. Replace the stub body with:
- *      return studentDAO.findById(studentId) != null;
+ *      return userDAO.findById(userId) != null;
  *  3. Remove this comment block.
  */
-public class StudentValidator {
+public class UserValidator {
 
     /**
-     * Returns true if the given studentId corresponds to a registered student.
+     * Returns true if the given userId corresponds to a registered user.
      *
      * STUB: unconditionally returns true.
-     * Replace with a real StudentDAO lookup when the registration module is active.
+     * Replace with a real UserDAO lookup when the registration module is active.
      *
-     * @param studentId the student ID entered by staff
-     * @return true if the student exists; false otherwise
+     * @param userId the user ID entered by staff
+     * @return true if the user exists; false otherwise
      */
-    public boolean exists(int studentId) {
+    public boolean exists(int userId) {
         // ── STUB ──────────────────────────────────────────────────────────
-        // TODO: replace with → return studentDAO.findById(studentId) != null;
+        // TODO: replace with → return userDAO.findById(userId) != null;
         // ─────────────────────────────────────────────────────────────────
         return true;
     }

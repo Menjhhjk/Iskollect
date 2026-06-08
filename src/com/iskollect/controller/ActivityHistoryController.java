@@ -1,19 +1,19 @@
 package com.iskollect.controller;
 
-import com.iskollect.model.Student;
-import com.iskollect.service.TransactionService;
-import com.iskollect.service.TransactionService.HistoryFilter;
+import com.iskollect.model.User;
+import com.iskollect.service.ActivityHistoryService;
+import com.iskollect.service.ActivityHistoryService.HistoryFilter;
 import com.iskollect.util.SessionManager;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TableView;
 
-public class TransactionController {
+public class ActivityHistoryController {
     @FXML private TableView<Object> historyTable;
     @FXML private ComboBox<HistoryFilter> filterComboBox;
 
-    private final TransactionService transactionService = new TransactionService();
+    private final ActivityHistoryService activityHistoryService = new ActivityHistoryService();
 
     @FXML
     public void initialize() {
@@ -25,20 +25,20 @@ public class TransactionController {
 
     @FXML
     public void loadFullHistory() {
-        Student student = SessionManager.getCurrentStudent();
-        if (student != null && historyTable != null) {
+        User user = SessionManager.getCurrentUser();
+        if (user != null && historyTable != null) {
             historyTable.setItems(FXCollections.observableArrayList(
-                    transactionService.getFullHistory(student.getStudentId()).getEntries()));
+                    activityHistoryService.getFullHistory(user.getUserId()).getEntries()));
         }
     }
 
     @FXML
     public void applyFilter() {
-        Student student = SessionManager.getCurrentStudent();
-        if (student == null || historyTable == null || filterComboBox == null || filterComboBox.getValue() == null) {
+        User user = SessionManager.getCurrentUser();
+        if (user == null || historyTable == null || filterComboBox == null || filterComboBox.getValue() == null) {
             return;
         }
         historyTable.setItems(FXCollections.observableArrayList(
-                transactionService.getFilteredHistory(student.getStudentId(), filterComboBox.getValue()).getEntries()));
+                activityHistoryService.getFilteredHistory(user.getUserId(), filterComboBox.getValue()).getEntries()));
     }
 }

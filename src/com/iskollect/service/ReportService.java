@@ -17,17 +17,19 @@ import java.util.List;
 import java.util.Map;
 
 public class ReportService {
-    public ReportResult getBottleSummary(int studentId, LocalDate from, LocalDate to) {
+    public ReportResult getBottleSummary(int userId, LocalDate from, LocalDate to) {
         String type = "BOTTLE_SUMMARY";
         try {
-            validateStudentAndDates(studentId, from, to);
+            validateUserAndDates(userId, from, to);
             if (tooOld(from)) {
                 return ReportResult.failure(type, "From date cannot be more than 2 years in the past.");
             }
-            String sql = "SELECT student_id, COALESCE(SUM(bottles), 0) AS total_bottles, "
-                    + "COALESCE(SUM(points), 0) AS total_points FROM transactions "
-                    + "WHERE student_id = ? AND date BETWEEN ? AND ? GROUP BY student_id";
-            List<Map<String, Object>> rows = query(sql, studentId, from, to);
+            String sql = "SELECT br.user_id, COALESCE(SUM(br.bottles_collected), 0) AS total_bottles, "
+                    + "COALESCE((SELECT SUM(pl.points_change) FROM points_ledger pl "
+                    + "WHERE pl.user_id = br.user_id AND pl.created_at::date BETWEEN ? AND ?), 0) AS total_points "
+                    + "FROM bottle_records br WHERE br.user_id = ? AND br.collection_date BETWEEN ? AND ? "
+                    + "GROUP BY br.user_id";
+            List<Map<String, Object>> rows = query(sql, from, to, userId, from, to);
             Map<String, Object> totals = rows.isEmpty() ? Map.of("total_bottles", 0, "total_points", 0) : rows.get(0);
             return ReportResult.success(type, rows, totals);
         } catch (InvalidInputException | SQLException e) {
@@ -38,29 +40,29 @@ public class ReportService {
     public ReportResult getWeeklyLeaderboard() {
         String type = "WEEKLY_LEADERBOARD";
         try {
-            String sql = "SELECT s.student_id, s.name, COALESCE(SUM(t.bottles), 0) AS weekly_bottles "
-                    + "FROM students s LEFT JOIN transactions t ON s.student_id = t.student_id "
-                    + "AND t.date >= DATE_TRUNC('week', CURRENT_DATE)::date "
-                    + "GROUP BY s.student_id, s.name ORDER BY weekly_bottles DESC, s.name ASC";
+            String sql = "SELECT u.user_id, COALESCE(u.name, u.username) AS name, "
+                    + "COALESCE(SUM(br.bottles_collected), 0) AS weekly_bottles "
+                    + "FROM users u LEFT JOIN bottle_records br ON u.user_id = br.user_id "
+                    + "AND br.week_start_date = DATE_TRUNC('week', CURRENT_DATE)::date "
+                    + "GROUP BY u.user_id, u.name, u.username ORDER BY weekly_bottles DESC, name ASC";
             return ReportResult.success(type, query(sql), Map.of());
         } catch (SQLException e) {
             return ReportResult.failure(type, e.getMessage());
         }
     }
 
-    public ReportResult getPointsLedger(int studentId, LocalDate from, LocalDate to) {
+    public ReportResult getPointsLedger(int userId, LocalDate from, LocalDate to) {
         String type = "POINTS_LEDGER";
         try {
-            validateStudentAndDates(studentId, from, to);
+            validateUserAndDates(userId, from, to);
             if (tooOld(from)) {
                 return ReportResult.failure(type, "From date cannot be more than 2 years in the past.");
             }
-            String sql = "SELECT 'SUBMISSION' AS entry_type, trans_id AS entry_id, date AS entry_date, points AS points_delta "
-                    + "FROM transactions WHERE student_id = ? AND date BETWEEN ? AND ? "
-                    + "UNION ALL SELECT 'REDEMPTION', redeem_id, redeem_date, -points_deducted "
-                    + "FROM redeemed_rewards WHERE student_id = ? AND redeem_date BETWEEN ? AND ? "
+            String sql = "SELECT source AS entry_type, ledger_id AS entry_id, created_at::date AS entry_date, "
+                    + "points_change AS points_delta, ref_id FROM points_ledger "
+                    + "WHERE user_id = ? AND created_at::date BETWEEN ? AND ? "
                     + "ORDER BY entry_date DESC, entry_id DESC";
-            return ReportResult.success(type, query(sql, studentId, from, to, studentId, from, to), Map.of());
+            return ReportResult.success(type, query(sql, userId, from, to), Map.of());
         } catch (InvalidInputException | SQLException e) {
             return ReportResult.failure(type, e.getMessage());
         }
@@ -69,12 +71,13 @@ public class ReportService {
     public ReportResult getRedemptionReport(Boolean fulfilledOnly) {
         String type = "REDEMPTION_REPORT";
         try {
-            String sql = "SELECT rr.*, s.name AS student_name, r.name AS reward_name FROM redeemed_rewards rr "
-                    + "JOIN students s ON rr.student_id = s.student_id "
-                    + "JOIN rewards r ON rr.reward_id = r.reward_id "
-                    + (fulfilledOnly == null ? "" : "WHERE rr.is_fulfilled = ? ")
-                    + "ORDER BY rr.redeem_date DESC, rr.redeem_id DESC";
-            List<Map<String, Object>> rows = fulfilledOnly == null ? query(sql) : query(sql, fulfilledOnly);
+            String sql = "SELECT rd.*, COALESCE(u.name, u.username) AS user_name, c.coupon_name "
+                    + "FROM redemptions rd JOIN users u ON rd.user_id = u.user_id "
+                    + "JOIN coupons c ON rd.coupon_id = c.coupon_id "
+                    + (fulfilledOnly == null ? "" : "WHERE rd.status = ? ")
+                    + "ORDER BY rd.redemption_date DESC, rd.redemption_id DESC";
+            List<Map<String, Object>> rows = fulfilledOnly == null ? query(sql)
+                    : query(sql, fulfilledOnly ? "Claimed" : "Pending");
             return ReportResult.success(type, rows, Map.of("total_redemptions", rows.size()));
         } catch (SQLException e) {
             return ReportResult.failure(type, e.getMessage());
@@ -85,9 +88,9 @@ public class ReportService {
         String type = "SYSTEM_SUMMARY";
         try {
             String sql = "SELECT "
-                    + "(SELECT COALESCE(SUM(bottles), 0) FROM transactions) AS total_bottles_collected, "
-                    + "(SELECT COALESCE(SUM(points), 0) FROM transactions) AS total_points_issued, "
-                    + "(SELECT COUNT(*) FROM redeemed_rewards) AS total_redemptions";
+                    + "(SELECT COALESCE(SUM(bottles_collected), 0) FROM bottle_records) AS total_bottles_collected, "
+                    + "(SELECT COALESCE(SUM(points_change), 0) FROM points_ledger WHERE points_change > 0) AS total_points_issued, "
+                    + "(SELECT COUNT(*) FROM redemptions) AS total_redemptions";
             List<Map<String, Object>> rows = query(sql);
             return ReportResult.success(type, rows, rows.isEmpty() ? Map.of() : rows.get(0));
         } catch (SQLException e) {
@@ -95,9 +98,9 @@ public class ReportService {
         }
     }
 
-    private void validateStudentAndDates(int studentId, LocalDate from, LocalDate to) throws InvalidInputException {
-        if (studentId <= 0) {
-            throw new InvalidInputException("studentId must be greater than zero.");
+    private void validateUserAndDates(int userId, LocalDate from, LocalDate to) throws InvalidInputException {
+        if (userId <= 0) {
+            throw new InvalidInputException("userId must be greater than zero.");
         }
         if (from == null || to == null) {
             throw new InvalidInputException("from and to dates are required.");

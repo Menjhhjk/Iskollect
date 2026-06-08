@@ -11,7 +11,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 
 public class InOutController {
-    @FXML private TextField studentIdField;
+    @FXML private TextField userIdField;
     @FXML private Label statusLabel;
     @FXML private TableView<InOutLog> todayLogsTable;
 
@@ -34,14 +34,14 @@ public class InOutController {
 
     private void log(EventType eventType) {
         try {
-            int studentId = Integer.parseInt(studentIdField.getText().trim());
-            LogResult result = inOutService.logEvent(studentId, eventType, null);
+            int userId = Integer.parseInt(userIdField.getText().trim());
+            LogResult result = inOutService.logEvent(userId, eventType, null);
             setStatus(result.getMessage());
             if (result.isSuccess()) {
                 refreshTodayLogs();
             }
         } catch (NumberFormatException e) {
-            setStatus("Student ID must be a whole number.");
+            setStatus("User ID must be a whole number.");
         }
     }
 

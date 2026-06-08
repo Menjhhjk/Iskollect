@@ -1,6 +1,6 @@
 package com.iskollect.controller;
 
-import com.iskollect.model.Student;
+import com.iskollect.model.User;
 import com.iskollect.service.BadgeService;
 import com.iskollect.service.PointsService;
 import com.iskollect.service.StreakService;
@@ -25,16 +25,16 @@ public class DashboardController {
 
     @FXML
     public void refresh() {
-        Student student = SessionManager.getCurrentStudent();
-        if (student == null) {
+        User user = SessionManager.getCurrentUser();
+        if (user == null) {
             setText(nameLabel, "No active session");
             return;
         }
-        int studentId = student.getStudentId();
-        setText(nameLabel, student.getName());
-        setText(pointsLabel, String.valueOf(pointsService.getTotalPoints(studentId)));
-        setText(badgeLabel, badgeService.getCurrentBadge(studentId).getTierName());
-        setText(streakLabel, String.valueOf(streakService.getStreakCount(studentId)));
+        int userId = user.getUserId();
+        setText(nameLabel, user.getName());
+        setText(pointsLabel, String.valueOf(pointsService.getTotalPoints(userId)));
+        setText(badgeLabel, badgeService.getCurrentBadge(userId).getTierName());
+        setText(streakLabel, String.valueOf(streakService.getStreakCount(userId)));
     }
 
     private void setText(Label label, String text) {

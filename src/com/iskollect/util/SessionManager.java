@@ -1,30 +1,30 @@
 package com.iskollect.util;
 
-import com.iskollect.model.Student;
+import com.iskollect.model.User;
 
 public class SessionManager {
-    private static Student loggedInStudent;
+    private static User loggedInUser;
 
-    public static void setSession(Student student) {
-        if (student != null) {
+    public static void setSession(User user) {
+        if (user != null) {
             //generates session token
             String token = java.util.UUID.randomUUID().toString();
-            student.setSessionToken(token);
+            user.setSessionToken(token);
         }
 
-        loggedInStudent = student;
+        loggedInUser = user;
     }
 
     //getters and setters
-    public static Student getSession() {
-        return loggedInStudent;
+    public static User getSession() {
+        return loggedInUser;
     }
 
-    public static Student getCurrentStudent() {
+    public static User getCurrentUser() {
         return getSession();
     }
 
     public static void clearSession() {
-        loggedInStudent = null;
+        loggedInUser = null;
     }
 }

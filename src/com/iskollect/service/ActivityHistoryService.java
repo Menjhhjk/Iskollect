@@ -1,38 +1,38 @@
 package com.iskollect.service;
 
-import com.iskollect.dao.RedeemedRewardDAO;
-import com.iskollect.dao.TransactionDAO;
+import com.iskollect.dao.RedemptionDAO;
+import com.iskollect.dao.BottleRecordDAO;
 import com.iskollect.exception.DatabaseException;
-import com.iskollect.model.RedeemedReward;
-import com.iskollect.model.Transaction;
-import com.iskollect.model.TransactionHistory;
+import com.iskollect.model.Redemption;
+import com.iskollect.model.BottleRecord;
+import com.iskollect.model.ActivityHistory;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-public class TransactionService {
+public class ActivityHistoryService {
     public enum HistoryFilter {
         TODAY, THIS_WEEK, THIS_MONTH, THIS_YEAR
     }
 
-    private final TransactionDAO transactionDAO = new TransactionDAO();
-    private final RedeemedRewardDAO redeemedRewardDAO = new RedeemedRewardDAO();
+    private final BottleRecordDAO bottleRecordDAO = new BottleRecordDAO();
+    private final RedemptionDAO redemptionDAO = new RedemptionDAO();
 
-    public TransactionHistory getFullHistory(int studentId) {
+    public ActivityHistory getFullHistory(int userId) {
         try {
             List<Object> entries = new ArrayList<>();
-            entries.addAll(transactionDAO.getByStudentId(studentId));
-            entries.addAll(redeemedRewardDAO.getByStudentId(studentId));
+            entries.addAll(bottleRecordDAO.getByUserId(userId));
+            entries.addAll(redemptionDAO.getByUserId(userId));
             entries.sort(Comparator.comparing(this::entryDate).reversed());
-            return new TransactionHistory(entries);
+            return new ActivityHistory(entries);
         } catch (DatabaseException e) {
-            return new TransactionHistory(List.of());
+            return new ActivityHistory(List.of());
         }
     }
 
-    public TransactionHistory getFilteredHistory(int studentId, HistoryFilter filter) {
+    public ActivityHistory getFilteredHistory(int userId, HistoryFilter filter) {
         LocalDate today = LocalDate.now();
         LocalDate from;
         if (filter == HistoryFilter.TODAY) {
@@ -46,19 +46,19 @@ public class TransactionService {
         }
 
         List<Object> filtered = new ArrayList<>();
-        for (Object entry : getFullHistory(studentId).getEntries()) {
+        for (Object entry : getFullHistory(userId).getEntries()) {
             LocalDate date = entryDate(entry);
             if (!date.isBefore(from) && !date.isAfter(today)) {
                 filtered.add(entry);
             }
         }
-        return new TransactionHistory(filtered);
+        return new ActivityHistory(filtered);
     }
 
     private LocalDate entryDate(Object entry) {
-        if (entry instanceof Transaction) {
-            return ((Transaction) entry).getDate();
+        if (entry instanceof BottleRecord) {
+            return ((BottleRecord) entry).getDate();
         }
-        return ((RedeemedReward) entry).getRedeemDate();
+        return ((Redemption) entry).getRedemptionDate();
     }
 }

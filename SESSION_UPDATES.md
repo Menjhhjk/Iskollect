@@ -185,6 +185,6 @@ No remaining matches were found in the checked source, SQL, resource, or Maven f
 - Run the PostgreSQL schema against the actual development database.
 - Add broader unit and integration tests for DAO and service behavior.
 
-## Notes for Advisor
+## Notes
 
 The session produced a compiling backend-oriented implementation. The database direction is now PostgreSQL-specific, and the Maven build verifies that the source compiles with the declared JavaFX and PostgreSQL dependencies. The main intentional gap is authentication and registration, which remains separate by project instruction.

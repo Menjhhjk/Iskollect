@@ -1,6 +1,6 @@
 package com.iskollect.scheduler;
 
-import com.iskollect.dao.StudentDAO;
+import com.iskollect.dao.UserDAO;
 import com.iskollect.exception.DatabaseException;
 import com.iskollect.service.BadgeService;
 import com.iskollect.util.DBConnection;
@@ -20,7 +20,7 @@ public class WeeklyResetScheduler {
     private static final String LAST_RESET_KEY = "last_weekly_reset";
 
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-    private final StudentDAO studentDAO = new StudentDAO();
+    private final UserDAO userDAO = new UserDAO();
     private final BadgeService badgeService = new BadgeService();
 
     public void start() {
@@ -38,9 +38,9 @@ public class WeeklyResetScheduler {
 
     public void resetWeeklyData() {
         try {
-            List<Integer> studentIds = studentDAO.getAllStudentIds();
-            for (Integer studentId : studentIds) {
-                badgeService.resetWeeklyData(studentId);
+            List<Integer> userIds = userDAO.getAllUserIds();
+            for (Integer userId : userIds) {
+                badgeService.resetWeeklyData(userId);
             }
             updateLastResetDate(LocalDate.now());
         } catch (DatabaseException e) {

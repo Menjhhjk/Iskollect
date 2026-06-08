@@ -1,8 +1,8 @@
 package com.iskollect.dao;
 
 import com.iskollect.exception.DatabaseException;
-import com.iskollect.model.Reward;
-import com.iskollect.model.Reward.CouponType;
+import com.iskollect.model.Coupon;
+import com.iskollect.model.Coupon.CouponType;
 import com.iskollect.util.DBConnection;
 
 import java.sql.Connection;
@@ -13,39 +13,39 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RewardDAO {
+public class CouponDAO {
     private Connection conn() {
         return DBConnection.getInstance().getConnection();
     }
 
-    public List<Reward> getAll() throws DatabaseException {
-        String sql = "SELECT * FROM rewards ORDER BY points_required ASC";
+    public List<Coupon> getAll() throws DatabaseException {
+        String sql = "SELECT * FROM coupons ORDER BY points_required ASC";
         try (PreparedStatement ps = conn().prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
-            List<Reward> rewards = new ArrayList<>();
+            List<Coupon> coupons = new ArrayList<>();
             while (rs.next()) {
-                rewards.add(map(rs));
+                coupons.add(map(rs));
             }
-            return rewards;
+            return coupons;
         } catch (SQLException e) {
-            throw new DatabaseException("Failed to fetch rewards.", e);
+            throw new DatabaseException("Failed to fetch coupons.", e);
         }
     }
 
-    public Reward findById(int rewardId) throws DatabaseException {
-        String sql = "SELECT * FROM rewards WHERE reward_id = ?";
+    public Coupon findById(int couponId) throws DatabaseException {
+        String sql = "SELECT * FROM coupons WHERE coupon_id = ?";
         try (PreparedStatement ps = conn().prepareStatement(sql)) {
-            ps.setInt(1, rewardId);
+            ps.setInt(1, couponId);
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() ? map(rs) : null;
             }
         } catch (SQLException e) {
-            throw new DatabaseException("Failed to find reward " + rewardId, e);
+            throw new DatabaseException("Failed to find coupon " + couponId, e);
         }
     }
 
-    public boolean insert(Reward r) throws DatabaseException {
-        String sql = "INSERT INTO rewards (name, points_required, description, coupon_type) VALUES (?, ?, ?, ?)";
+    public boolean insert(Coupon r) throws DatabaseException {
+        String sql = "INSERT INTO coupons (coupon_name, points_required, description, coupon_type) VALUES (?, ?, ?, ?)";
         try (PreparedStatement ps = conn().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, r.getName());
             ps.setDouble(2, r.getPointsRequired());
@@ -54,19 +54,19 @@ public class RewardDAO {
             boolean inserted = ps.executeUpdate() > 0;
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (keys.next()) {
-                    r.setRewardId(keys.getInt(1));
+                    r.setCouponId(keys.getInt(1));
                 }
             }
             return inserted;
         } catch (SQLException e) {
-            throw new DatabaseException("Failed to insert reward.", e);
+            throw new DatabaseException("Failed to insert coupon.", e);
         }
     }
 
-    private Reward map(ResultSet rs) throws SQLException {
-        return new Reward(
-                rs.getInt("reward_id"),
-                rs.getString("name"),
+    private Coupon map(ResultSet rs) throws SQLException {
+        return new Coupon(
+                rs.getInt("coupon_id"),
+                rs.getString("coupon_name"),
                 rs.getDouble("points_required"),
                 rs.getString("description"),
                 CouponType.valueOf(rs.getString("coupon_type"))

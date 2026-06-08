@@ -1,29 +1,29 @@
 package com.iskollect.model;
 
-public class Reward {
+public class Coupon {
     public enum CouponType {
         SUPPLIES, SNACK_V1, SNACK_V2, LUNCH
     }
 
-    private int rewardId;
+    private int couponId;
     private String name;
     private double pointsRequired;
     private String description;
     private CouponType couponType;
 
-    public Reward() {
+    public Coupon() {
     }
 
-    public Reward(int rewardId, String name, double pointsRequired, String description, CouponType couponType) {
-        this.rewardId = rewardId;
+    public Coupon(int couponId, String name, double pointsRequired, String description, CouponType couponType) {
+        this.couponId = couponId;
         this.name = name;
         this.pointsRequired = pointsRequired;
         this.description = description;
         this.couponType = couponType;
     }
 
-    public int getRewardId() { return rewardId; }
-    public void setRewardId(int rewardId) { this.rewardId = rewardId; }
+    public int getCouponId() { return couponId; }
+    public void setCouponId(int couponId) { this.couponId = couponId; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
     public double getPointsRequired() { return pointsRequired; }
@@ -35,7 +35,7 @@ public class Reward {
 
     @Override
     public String toString() {
-        return "Reward{rewardId=" + rewardId + ", name='" + name + "', pointsRequired="
+        return "Coupon{couponId=" + couponId + ", name='" + name + "', pointsRequired="
                 + pointsRequired + ", description='" + description + "', couponType=" + couponType + "}";
     }
 }

@@ -7,7 +7,7 @@ import com.iskollect.model.InOutLog.EntryMethod;
 import com.iskollect.model.InOutLog.EventType;
 import com.iskollect.model.InOutLog.LogStatus;
 import com.iskollect.model.LogResult;
-import com.iskollect.util.StudentValidator;
+import com.iskollect.util.UserValidator;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -17,15 +17,15 @@ import java.util.List;
  * Business logic layer for Iskollect Ingress / Egress Monitoring.
  *
  * Responsibilities:
- *   1. Validate staff input (studentId, eventType)
- *   2. Check student existence via StudentValidator (stub until registration module)
+ *   1. Validate staff input (userId, eventType)
+ *   2. Check user existence via UserValidator (stub until registration module)
  *   3. Enforce duplicate-window logic to prevent double-logging
  *   4. Determine the correct LogStatus for each event
  *   5. Persist the log via InOutLogDAO
  *   6. Return a LogResult value object to the calling controller
  *
- * This class is intentionally decoupled from the Student & Device
- * Registration Module. See StudentValidator for the swap-in point.
+ * This class is intentionally decoupled from the User & Device
+ * Registration Module. See UserValidator for the swap-in point.
  */
 public class InOutService {
 
@@ -34,7 +34,7 @@ public class InOutService {
     /**
      * Duplicate-window in minutes.
      *
-     * If the same student logs the same event type (e.g., INGRESS) within
+     * If the same user logs the same event type (e.g., INGRESS) within
      * this many minutes of their last INGRESS, the new log is flagged as
      * DUPLICATE and the service returns LogResult.DUPLICATE instead of
      * inserting a second record.
@@ -47,20 +47,20 @@ public class InOutService {
     // ── Dependencies ──────────────────────────────────────────────────────
 
     private final InOutLogDAO     logDAO;
-    private final StudentValidator studentValidator;
+    private final UserValidator userValidator;
 
     // ── Constructors ──────────────────────────────────────────────────────
 
     /** Default constructor — wires up real implementations. */
     public InOutService() {
         this.logDAO           = new InOutLogDAO();
-        this.studentValidator = new StudentValidator();  // stub until registration module
+        this.userValidator = new UserValidator();  // stub until registration module
     }
 
     /** Injection constructor — used for unit testing with mocks. */
-    public InOutService(InOutLogDAO logDAO, StudentValidator studentValidator) {
+    public InOutService(InOutLogDAO logDAO, UserValidator userValidator) {
         this.logDAO           = logDAO;
-        this.studentValidator = studentValidator;
+        this.userValidator = userValidator;
     }
 
     // ── Core: Log an event ────────────────────────────────────────────────
@@ -70,34 +70,34 @@ public class InOutService {
      *
      * Processing order:
      *   1. Validate inputs
-     *   2. Check student existence (stub: always passes)
+     *   2. Check user existence (stub: always passes)
      *   3. Check for duplicate within the window
      *   4. Build, persist, and return the log
      *
-     * @param studentId  the student ID typed by staff
+     * @param userId  the user ID typed by staff
      * @param eventType  INGRESS or EGRESS
      * @param staffNote  optional free-text note (may be null or blank)
      * @return LogResult describing outcome and carrying the persisted log
      */
-    public LogResult logEvent(int studentId, EventType eventType, String staffNote) {
+    public LogResult logEvent(int userId, EventType eventType, String staffNote) {
 
         // ── Step 1: Input validation ───────────────────────────────────────
-        if (studentId <= 0) {
-            return LogResult.invalidInput("Student ID must be a positive integer.");
+        if (userId <= 0) {
+            return LogResult.invalidInput("User ID must be a positive integer.");
         }
         if (eventType == null) {
             return LogResult.invalidInput("Event type (INGRESS / EGRESS) must be specified.");
         }
 
-        // ── Step 2: Student existence check ───────────────────────────────
+        // ── Step 2: User existence check ───────────────────────────────
         // ┌─────────────────────────────────────────────────────────────────┐
-        // │ STUB: studentValidator.exists() always returns true.            │
-        // │ Replace with real StudentDAO lookup when registration is ready. │
+        // │ STUB: userValidator.exists() always returns true.            │
+        // │ Replace with real UserDAO lookup when registration is ready. │
         // └─────────────────────────────────────────────────────────────────┘
-        if (!studentValidator.exists(studentId)) {
+        if (!userValidator.exists(userId)) {
             // Log an UNRESOLVED entry so the event is not silently lost.
-            // Staff can resolve it once the student registers.
-            return persistUnresolved(studentId, eventType, staffNote);
+            // Staff can resolve it once the user registers.
+            return persistUnresolved(userId, eventType, staffNote);
         }
 
         // ── Step 3: Duplicate-window check ────────────────────────────────
@@ -105,7 +105,7 @@ public class InOutService {
             LocalDateTime windowStart = LocalDateTime.now()
                     .minusMinutes(DUPLICATE_WINDOW_MINUTES);
 
-            InOutLog recent = logDAO.getRecentSameEvent(studentId, eventType, windowStart);
+            InOutLog recent = logDAO.getRecentSameEvent(userId, eventType, windowStart);
 
             if (recent != null) {
                 return LogResult.duplicate(recent);
@@ -117,7 +117,7 @@ public class InOutService {
 
         // ── Step 4: Build and persist the valid log ────────────────────────
         InOutLog log = new InOutLog(
-            studentId,
+            userId,
             eventType,
             EntryMethod.MANUAL,
             LocalDateTime.now(),
@@ -138,83 +138,83 @@ public class InOutService {
     /**
      * Shorthand for logging an INGRESS event with no staff note.
      *
-     * @param studentId the student entering
+     * @param userId the user entering
      * @return LogResult
      */
-    public LogResult logIngress(int studentId) {
-        return logEvent(studentId, EventType.INGRESS, null);
+    public LogResult logIngress(int userId) {
+        return logEvent(userId, EventType.INGRESS, null);
     }
 
     /**
      * Shorthand for logging an EGRESS event with no staff note.
      *
-     * @param studentId the student exiting
+     * @param userId the user exiting
      * @return LogResult
      */
-    public LogResult logEgress(int studentId) {
-        return logEvent(studentId, EventType.EGRESS, null);
+    public LogResult logEgress(int userId) {
+        return logEvent(userId, EventType.EGRESS, null);
     }
 
     // ── State queries ─────────────────────────────────────────────────────
 
     /**
-     * Returns the most recent log for a student.
-     * Used by the UI to show the student's current IN / OUT status.
+     * Returns the most recent log for a user.
+     * Used by the UI to show the user's current IN / OUT status.
      *
-     * @param studentId target student
+     * @param userId target user
      * @return the most recent InOutLog, or null if no logs exist
      */
-    public InOutLog getCurrentStatus(int studentId) {
+    public InOutLog getCurrentStatus(int userId) {
         try {
-            return logDAO.getLastEvent(studentId);
+            return logDAO.getLastEvent(userId);
         } catch (DatabaseException e) {
-            System.err.println("getCurrentStatus failed for student " + studentId + ": " + e.getMessage());
+            System.err.println("getCurrentStatus failed for user " + userId + ": " + e.getMessage());
             return null;
         }
     }
 
     /**
-     * Returns true if the student's most recent log is an INGRESS.
+     * Returns true if the user's most recent log is an INGRESS.
      * Returns false if the last log is EGRESS, or if no logs exist.
      *
-     * @param studentId target student
-     * @return true if student is currently considered inside the premises
+     * @param userId target user
+     * @return true if user is currently considered inside the premises
      */
-    public boolean isCurrentlyInside(int studentId) {
-        InOutLog last = getCurrentStatus(studentId);
+    public boolean isCurrentlyInside(int userId) {
+        InOutLog last = getCurrentStatus(userId);
         return last != null && last.getEventType() == EventType.INGRESS;
     }
 
     // ── History queries ───────────────────────────────────────────────────
 
     /**
-     * Returns the full log history for a student, newest first.
+     * Returns the full log history for a user, newest first.
      *
-     * @param studentId target student
+     * @param userId target user
      * @return list of InOutLog (may be empty)
      */
-    public List<InOutLog> getStudentHistory(int studentId) {
+    public List<InOutLog> getUserHistory(int userId) {
         try {
-            return logDAO.getByStudentId(studentId);
+            return logDAO.getByUserId(userId);
         } catch (DatabaseException e) {
-            System.err.println("getStudentHistory failed: " + e.getMessage());
+            System.err.println("getUserHistory failed: " + e.getMessage());
             return List.of();
         }
     }
 
     /**
-     * Returns logs for a student filtered to a date range.
+     * Returns logs for a user filtered to a date range.
      *
-     * @param studentId target student
+     * @param userId target user
      * @param from      start date inclusive
      * @param to        end date inclusive
      * @return filtered list of InOutLog
      */
-    public List<InOutLog> getStudentHistoryByDateRange(int studentId, LocalDate from, LocalDate to) {
+    public List<InOutLog> getUserHistoryByDateRange(int userId, LocalDate from, LocalDate to) {
         try {
-            return logDAO.getByStudentAndDateRange(studentId, from, to);
+            return logDAO.getByUserAndDateRange(userId, from, to);
         } catch (DatabaseException e) {
-            System.err.println("getStudentHistoryByDateRange failed: " + e.getMessage());
+            System.err.println("getUserHistoryByDateRange failed: " + e.getMessage());
             return List.of();
         }
     }
@@ -267,23 +267,23 @@ public class InOutService {
     // ── UNRESOLVED handling ───────────────────────────────────────────────
 
     /**
-     * Logs the event with status UNRESOLVED when the student is not found.
+     * Logs the event with status UNRESOLVED when the user is not found.
      *
      * This preserves the physical event in the audit trail and allows
-     * retroactive resolution once the student registers.
+     * retroactive resolution once the user registers.
      *
-     * Called when studentValidator.exists() returns false.
+     * Called when userValidator.exists() returns false.
      * Currently unreachable (stub always returns true), but wired in
      * so no events are silently dropped once real validation is active.
      *
-     * @param studentId  the unrecognised student ID
+     * @param userId  the unrecognised user ID
      * @param eventType  INGRESS or EGRESS
      * @param staffNote  optional note
-     * @return LogResult with outcome STUDENT_NOT_FOUND
+     * @return LogResult with outcome USER_NOT_FOUND
      */
-    private LogResult persistUnresolved(int studentId, EventType eventType, String staffNote) {
+    private LogResult persistUnresolved(int userId, EventType eventType, String staffNote) {
         InOutLog log = new InOutLog(
-            studentId,
+            userId,
             eventType,
             EntryMethod.MANUAL,
             LocalDateTime.now(),
@@ -295,7 +295,7 @@ public class InOutService {
         } catch (DatabaseException e) {
             System.err.println("Failed to persist UNRESOLVED log: " + e.getMessage());
         }
-        return LogResult.studentNotFound(studentId);
+        return LogResult.userNotFound(userId);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────
