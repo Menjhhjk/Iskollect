@@ -218,6 +218,28 @@ Run it from the IDE as:
 com.iskollect.TestDatabaseConnection
 ```
 
+## JavaFX Prototypes
+
+The repository includes two JavaFX UI prototypes based on the UI team's low-fidelity PDF:
+
+- `com.iskollect.prototype.HighFidelityPrototype`
+  - Current default for `mvn javafx:run`
+  - Uses the existing Supabase/JDBC backend where data is available
+  - Shows `NIL` placeholders when tables are empty
+  - Includes a `Bypass Login for Testing` button
+  - Uses a green-grey/white palette with muted accent colors
+- `com.iskollect.prototype.LowFidelityPrototype`
+  - Earlier wireframe-style prototype
+  - Useful for comparing against the original low-fidelity layout
+
+Run the high-fidelity prototype:
+
+```bash
+mvn javafx:run
+```
+
+If your IDE reports `JavaFX runtime components are missing`, use the Maven command above or configure the IDE to launch with the JavaFX Maven plugin/module path.
+
 ## Build and Test
 
 Compile:

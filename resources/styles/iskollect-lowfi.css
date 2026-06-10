@@ -1,0 +1,214 @@
+.root {
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
+    -fx-background-color: #f5f7f2;
+    -fx-text-fill: #172016;
+}
+
+.app-shell {
+    -fx-background-color: #f5f7f2;
+}
+
+.sidebar {
+    -fx-background-color: #f8faf5;
+    -fx-border-color: #d8dfd2;
+    -fx-border-width: 0 1 0 0;
+    -fx-padding: 24 18 18 18;
+    -fx-spacing: 14;
+}
+
+.brand-mark {
+    -fx-font-size: 24px;
+    -fx-font-weight: 800;
+    -fx-letter-spacing: 0;
+}
+
+.brand-subtitle {
+    -fx-font-size: 11px;
+    -fx-text-fill: #60705f;
+}
+
+.nav-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #293727;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 11 12;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-font-size: 13px;
+    -fx-pref-width: 200;
+}
+
+.nav-button:hover {
+    -fx-background-color: #e9efe4;
+}
+
+.nav-button-active {
+    -fx-background-color: #234d2b;
+    -fx-text-fill: white;
+}
+
+.page {
+    -fx-padding: 28;
+    -fx-spacing: 20;
+}
+
+.top-bar {
+    -fx-spacing: 12;
+    -fx-alignment: CENTER_LEFT;
+}
+
+.page-title {
+    -fx-font-size: 28px;
+    -fx-font-weight: 800;
+}
+
+.page-copy {
+    -fx-font-size: 13px;
+    -fx-text-fill: #61705f;
+}
+
+.card {
+    -fx-background-color: white;
+    -fx-border-color: #dbe2d6;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 18;
+}
+
+.metric-card {
+    -fx-background-color: white;
+    -fx-border-color: #dbe2d6;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 16;
+    -fx-min-width: 170;
+}
+
+.metric-value {
+    -fx-font-size: 28px;
+    -fx-font-weight: 800;
+}
+
+.metric-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: #667466;
+}
+
+.primary-button {
+    -fx-background-color: #234d2b;
+    -fx-text-fill: white;
+    -fx-background-radius: 7;
+    -fx-border-radius: 7;
+    -fx-padding: 10 16;
+    -fx-font-weight: 700;
+}
+
+.secondary-button {
+    -fx-background-color: #eef3ea;
+    -fx-text-fill: #243424;
+    -fx-background-radius: 7;
+    -fx-border-radius: 7;
+    -fx-padding: 10 16;
+}
+
+.outline-button {
+    -fx-background-color: transparent;
+    -fx-border-color: #bac8b6;
+    -fx-text-fill: #243424;
+    -fx-background-radius: 7;
+    -fx-border-radius: 7;
+    -fx-padding: 9 14;
+}
+
+.section-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: 800;
+}
+
+.small-title {
+    -fx-font-size: 14px;
+    -fx-font-weight: 800;
+}
+
+.muted {
+    -fx-text-fill: #6f7c6d;
+}
+
+.placeholder {
+    -fx-background-color: #edf1e8;
+    -fx-border-color: #cfd9c8;
+    -fx-border-style: segments(6, 5);
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-alignment: CENTER;
+    -fx-text-fill: #6d7c67;
+}
+
+.table-grid {
+    -fx-background-color: white;
+    -fx-border-color: #dbe2d6;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
+
+.table-header {
+    -fx-font-size: 11px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #5f6e5c;
+    -fx-background-color: #eef3ea;
+    -fx-padding: 10;
+}
+
+.table-cell-lite {
+    -fx-padding: 10;
+    -fx-border-color: #edf1e8;
+    -fx-border-width: 1 0 0 0;
+}
+
+.auth-pane {
+    -fx-background-color: #f5f7f2;
+    -fx-padding: 44;
+}
+
+.auth-card {
+    -fx-background-color: white;
+    -fx-border-color: #dbe2d6;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-padding: 30;
+    -fx-spacing: 14;
+    -fx-pref-width: 430;
+}
+
+.auth-title {
+    -fx-font-size: 30px;
+    -fx-font-weight: 800;
+}
+
+.text-field, .password-field, .combo-box-base, .date-picker {
+    -fx-background-color: white;
+    -fx-border-color: #cfd9c8;
+    -fx-border-radius: 7;
+    -fx-background-radius: 7;
+    -fx-padding: 8;
+}
+
+.progress-bar > .bar {
+    -fx-background-color: #234d2b;
+}
+
+.progress-bar > .track {
+    -fx-background-color: #e4eadf;
+}
+
+.screen-tab {
+    -fx-background-color: #eef3ea;
+    -fx-background-radius: 999;
+    -fx-padding: 7 13;
+    -fx-text-fill: #243424;
+}
+
+.screen-tab-active {
+    -fx-background-color: #234d2b;
+    -fx-text-fill: white;
+}
