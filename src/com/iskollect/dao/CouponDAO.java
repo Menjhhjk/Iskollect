@@ -2,7 +2,6 @@ package com.iskollect.dao;
 
 import com.iskollect.exception.DatabaseException;
 import com.iskollect.model.Coupon;
-import com.iskollect.model.Coupon.CouponType;
 import com.iskollect.util.DBConnection;
 
 import java.sql.Connection;
@@ -45,12 +44,10 @@ public class CouponDAO {
     }
 
     public boolean insert(Coupon r) throws DatabaseException {
-        String sql = "INSERT INTO coupons (coupon_name, points_required, description, coupon_type) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO coupons (coupon_name, points_required) VALUES (?, ?)";
         try (PreparedStatement ps = conn().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, r.getName());
             ps.setDouble(2, r.getPointsRequired());
-            ps.setString(3, r.getDescription());
-            ps.setString(4, r.getCouponType().name());
             boolean inserted = ps.executeUpdate() > 0;
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (keys.next()) {
@@ -67,9 +64,7 @@ public class CouponDAO {
         return new Coupon(
                 rs.getInt("coupon_id"),
                 rs.getString("coupon_name"),
-                rs.getDouble("points_required"),
-                rs.getString("description"),
-                CouponType.valueOf(rs.getString("coupon_type"))
+                rs.getDouble("points_required")
         );
     }
 }

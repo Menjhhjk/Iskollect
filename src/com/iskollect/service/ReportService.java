@@ -40,11 +40,11 @@ public class ReportService {
     public ReportResult getWeeklyLeaderboard() {
         String type = "WEEKLY_LEADERBOARD";
         try {
-            String sql = "SELECT u.user_id, COALESCE(u.name, u.username) AS name, "
+            String sql = "SELECT u.user_id, u.username AS name, "
                     + "COALESCE(SUM(br.bottles_collected), 0) AS weekly_bottles "
                     + "FROM users u LEFT JOIN bottle_records br ON u.user_id = br.user_id "
                     + "AND br.week_start_date = DATE_TRUNC('week', CURRENT_DATE)::date "
-                    + "GROUP BY u.user_id, u.name, u.username ORDER BY weekly_bottles DESC, name ASC";
+                    + "GROUP BY u.user_id, u.username ORDER BY weekly_bottles DESC, name ASC";
             return ReportResult.success(type, query(sql), Map.of());
         } catch (SQLException e) {
             return ReportResult.failure(type, e.getMessage());
@@ -71,13 +71,13 @@ public class ReportService {
     public ReportResult getRedemptionReport(Boolean fulfilledOnly) {
         String type = "REDEMPTION_REPORT";
         try {
-            String sql = "SELECT rd.*, COALESCE(u.name, u.username) AS user_name, c.coupon_name "
+            String sql = "SELECT rd.*, u.username AS user_name, c.coupon_name "
                     + "FROM redemptions rd JOIN users u ON rd.user_id = u.user_id "
                     + "JOIN coupons c ON rd.coupon_id = c.coupon_id "
                     + (fulfilledOnly == null ? "" : "WHERE rd.status = ? ")
                     + "ORDER BY rd.redemption_date DESC, rd.redemption_id DESC";
             List<Map<String, Object>> rows = fulfilledOnly == null ? query(sql)
-                    : query(sql, fulfilledOnly ? "Claimed" : "Pending");
+                    : query(sql, fulfilledOnly ? "claimed" : "pending");
             return ReportResult.success(type, rows, Map.of("total_redemptions", rows.size()));
         } catch (SQLException e) {
             return ReportResult.failure(type, e.getMessage());

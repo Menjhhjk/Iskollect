@@ -2,7 +2,6 @@ package com.iskollect.dao;
 
 import com.iskollect.exception.DatabaseException;
 import com.iskollect.model.InOutLog;
-import com.iskollect.model.InOutLog.EntryMethod;
 import com.iskollect.model.InOutLog.EventType;
 import com.iskollect.model.InOutLog.LogStatus;
 import com.iskollect.util.DBConnection;
@@ -42,43 +41,39 @@ public class InOutLogDAO {
     // ── SQL statements ────────────────────────────────────────────────────
 
     private static final String SQL_INSERT =
-        "INSERT INTO inout_logs (user_id, event_type, entry_method, timestamp, staff_note, status) " +
-        "VALUES (?, ?, ?, ?, ?, ?)";
+        "INSERT INTO inout_logs (user_id, action, performed_at, notes) VALUES (?, ?, ?, ?)";
 
     private static final String SQL_FIND_BY_ID =
         "SELECT * FROM inout_logs WHERE log_id = ?";
 
     private static final String SQL_GET_BY_USER =
-        "SELECT * FROM inout_logs WHERE user_id = ? ORDER BY timestamp DESC";
+        "SELECT * FROM inout_logs WHERE user_id = ? ORDER BY performed_at DESC";
 
     private static final String SQL_GET_ALL =
-        "SELECT * FROM inout_logs ORDER BY timestamp DESC";
+        "SELECT * FROM inout_logs ORDER BY performed_at DESC";
 
     private static final String SQL_GET_BY_DATE_RANGE =
-        "SELECT * FROM inout_logs WHERE user_id = ? AND timestamp::date BETWEEN ? AND ? " +
-        "ORDER BY timestamp DESC";
+        "SELECT * FROM inout_logs WHERE user_id = ? AND performed_at::date BETWEEN ? AND ? " +
+        "ORDER BY performed_at DESC";
 
     private static final String SQL_GET_LAST_EVENT =
-        "SELECT * FROM inout_logs WHERE user_id = ? ORDER BY timestamp DESC LIMIT 1";
+        "SELECT * FROM inout_logs WHERE user_id = ? ORDER BY performed_at DESC LIMIT 1";
 
     private static final String SQL_GET_LAST_EVENT_OF_TYPE =
-        "SELECT * FROM inout_logs WHERE user_id = ? AND event_type = ? " +
-        "ORDER BY timestamp DESC LIMIT 1";
+        "SELECT * FROM inout_logs WHERE user_id = ? AND action = ? " +
+        "ORDER BY performed_at DESC LIMIT 1";
 
     private static final String SQL_GET_RECENT_SAME_EVENT =
         "SELECT * FROM inout_logs " +
-        "WHERE user_id = ? AND event_type = ? " +
-        "AND timestamp >= ? " +
-        "ORDER BY timestamp DESC LIMIT 1";
-
-    private static final String SQL_UPDATE_STATUS =
-        "UPDATE inout_logs SET status = ? WHERE log_id = ?";
+        "WHERE user_id = ? AND action = ? " +
+        "AND performed_at >= ? " +
+        "ORDER BY performed_at DESC LIMIT 1";
 
     private static final String SQL_COUNT_BY_DATE =
-        "SELECT COUNT(*) FROM inout_logs WHERE timestamp::date = ?";
+        "SELECT COUNT(*) FROM inout_logs WHERE performed_at::date = ?";
 
     private static final String SQL_GET_BY_DATE =
-        "SELECT * FROM inout_logs WHERE timestamp::date = ? ORDER BY timestamp DESC";
+        "SELECT * FROM inout_logs WHERE performed_at::date = ? ORDER BY performed_at DESC";
 
     // ── Connection helper ─────────────────────────────────────────────────
 
@@ -99,10 +94,8 @@ public class InOutLogDAO {
         try (PreparedStatement ps = conn().prepareStatement(SQL_INSERT, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, log.getUserId());
             ps.setString(2, log.getEventType().name());
-            ps.setString(3, log.getEntryMethod().name());
-            ps.setTimestamp(4, Timestamp.valueOf(log.getTimestamp()));
-            ps.setString(5, log.getStaffNote());
-            ps.setString(6, log.getStatus().name());
+            ps.setTimestamp(3, Timestamp.valueOf(log.getTimestamp()));
+            ps.setString(4, log.getStaffNote());
             ps.executeUpdate();
 
             try (ResultSet keys = ps.getGeneratedKeys()) {
@@ -124,13 +117,7 @@ public class InOutLogDAO {
      * @throws DatabaseException if the UPDATE fails
      */
     public void updateStatus(int logId, LogStatus status) throws DatabaseException {
-        try (PreparedStatement ps = conn().prepareStatement(SQL_UPDATE_STATUS)) {
-            ps.setString(1, status.name());
-            ps.setInt(2, logId);
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            throw new DatabaseException("Failed to update status for log ID " + logId, e);
-        }
+        // The Supabase inout_logs table has no status column.
     }
 
     // ── Read operations ───────────────────────────────────────────────────
@@ -316,11 +303,9 @@ public class InOutLogDAO {
         return new InOutLog(
             rs.getInt("log_id"),
             rs.getInt("user_id"),
-            EventType.valueOf(rs.getString("event_type")),
-            EntryMethod.valueOf(rs.getString("entry_method")),
-            rs.getTimestamp("timestamp").toLocalDateTime(),
-            rs.getString("staff_note"),
-            LogStatus.valueOf(rs.getString("status"))
+            EventType.valueOf(rs.getString("action")),
+            rs.getTimestamp("performed_at").toLocalDateTime(),
+            rs.getString("notes")
         );
     }
 

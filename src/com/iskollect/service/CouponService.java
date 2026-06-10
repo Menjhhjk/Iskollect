@@ -28,6 +28,7 @@ public class CouponService {
         try {
             return couponDAO.getAll();
         } catch (DatabaseException e) {
+            e.printStackTrace();
             return List.of();
         }
     }

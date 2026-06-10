@@ -33,7 +33,7 @@ public class UserDAO {
     }
 
     public boolean registerUser(User user) throws DatabaseException {
-        String sql = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)";
 
         try (PreparedStatement ps = conn().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, user.getUsername());
@@ -127,12 +127,10 @@ public class UserDAO {
     }
 
     public void updateProfile(int userId, String name, String course, int yearLevel) throws DatabaseException {
-        String sql = "UPDATE users SET name = ?, course = ?, year_level = ? WHERE user_id = ?";
+        String sql = "UPDATE users SET username = ? WHERE user_id = ?";
         try (PreparedStatement ps = conn().prepareStatement(sql)) {
             ps.setString(1, name);
-            ps.setString(2, course);
-            ps.setInt(3, yearLevel);
-            ps.setInt(4, userId);
+            ps.setInt(2, userId);
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new DatabaseException("Failed to update profile.", e);
@@ -190,11 +188,11 @@ public class UserDAO {
         User user = new User();
         user.setUserId(rs.getInt("user_id"));
         user.setUsername(rs.getString("username"));
-        user.setName(readString(rs, "name", user.getUsername()));
+        user.setName(user.getUsername());
         user.setWebmail(rs.getString("email"));
-        user.setPassword(rs.getString("password"));
-        user.setCourse(readString(rs, "course", ""));
-        user.setYearLevel(readInt(rs, "year_level", 0));
+        user.setPassword(rs.getString("password_hash"));
+        user.setCourse("");
+        user.setYearLevel(0);
         user.setAge(readInt(rs, "age", 0));
         user.setProfilePhoto(readString(rs, "profile_photo", null));
         user.setTotalPoints(readDouble(rs, "total_points", 0));

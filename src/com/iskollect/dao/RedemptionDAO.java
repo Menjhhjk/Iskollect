@@ -27,7 +27,7 @@ public class RedemptionDAO {
             ps.setInt(2, r.getCouponId());
             ps.setDate(3, Date.valueOf(r.getRedemptionDate()));
             ps.setString(4, r.getCouponCode());
-            ps.setString(5, r.isFulfilled() ? "Claimed" : "Pending");
+            ps.setString(5, r.isFulfilled() ? "claimed" : "pending");
             boolean inserted = ps.executeUpdate() > 0;
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (keys.next()) {
@@ -53,7 +53,7 @@ public class RedemptionDAO {
     }
 
     public void markFulfilled(int redemptionId) throws DatabaseException {
-        String sql = "UPDATE redemptions SET status = 'Claimed' WHERE redemption_id = ?";
+        String sql = "UPDATE redemptions SET status = 'claimed' WHERE redemption_id = ?";
         try (PreparedStatement ps = conn().prepareStatement(sql)) {
             ps.setInt(1, redemptionId);
             ps.executeUpdate();
@@ -93,7 +93,7 @@ public class RedemptionDAO {
                 rs.getInt("coupon_id"),
                 rs.getDate("redemption_date").toLocalDate(),
                 rs.getString("coupon_code"),
-                "Claimed".equalsIgnoreCase(rs.getString("status")),
+                "claimed".equalsIgnoreCase(rs.getString("status")),
                 rs.getDouble("points_deducted")
         );
         try {

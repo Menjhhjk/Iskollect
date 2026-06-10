@@ -13,10 +13,8 @@ public class InOutLog {
     private int logId;
     private int userId;
     private EventType eventType;
-    private EntryMethod entryMethod;
     private LocalDateTime timestamp;
     private String staffNote;
-    private LogStatus status;
 
     public enum EventType {
         INGRESS,
@@ -37,25 +35,20 @@ public class InOutLog {
     }
 
     public InOutLog(int logId, int userId, EventType eventType,
-                    EntryMethod entryMethod, LocalDateTime timestamp,
-                    String staffNote, LogStatus status) {
+                    LocalDateTime timestamp, String staffNote) {
         this.logId = logId;
         this.userId = userId;
         this.eventType = eventType;
-        this.entryMethod = entryMethod;
         this.timestamp = timestamp;
         this.staffNote = staffNote;
-        this.status = status;
     }
 
     public InOutLog(int userId, EventType eventType, EntryMethod entryMethod,
                     LocalDateTime timestamp, String staffNote, LogStatus status) {
         this.userId = userId;
         this.eventType = eventType;
-        this.entryMethod = entryMethod;
         this.timestamp = timestamp;
         this.staffNote = staffNote;
-        this.status = status;
     }
 
     public int getLogId() { return logId; }
@@ -64,18 +57,18 @@ public class InOutLog {
     public void setUserId(int userId) { this.userId = userId; }
     public EventType getEventType() { return eventType; }
     public void setEventType(EventType eventType) { this.eventType = eventType; }
-    public EntryMethod getEntryMethod() { return entryMethod; }
-    public void setEntryMethod(EntryMethod entryMethod) { this.entryMethod = entryMethod; }
+    public EntryMethod getEntryMethod() { return EntryMethod.MANUAL; }
+    public void setEntryMethod(EntryMethod entryMethod) { }
     public LocalDateTime getTimestamp() { return timestamp; }
     public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
     public String getStaffNote() { return staffNote; }
     public void setStaffNote(String staffNote) { this.staffNote = staffNote; }
-    public LogStatus getStatus() { return status; }
-    public void setStatus(LogStatus status) { this.status = status; }
+    public LogStatus getStatus() { return LogStatus.VALID; }
+    public void setStatus(LogStatus status) { }
 
     @Override
     public String toString() {
-        return String.format("InOutLog{logId=%d, userId=%d, type=%s, method=%s, time=%s, status=%s}",
-                logId, userId, eventType, entryMethod, timestamp, status);
+        return String.format("InOutLog{logId=%d, userId=%d, action=%s, performedAt=%s}",
+                logId, userId, eventType, timestamp);
     }
 }
