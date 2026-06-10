@@ -2,6 +2,119 @@
 
 This document summarizes the changes made in the latest development session. It is written as a focused changelog for advisor review.
 
+## 2026-06-10 Supabase Alignment and Documentation Refresh
+
+### Session Scope
+
+This session aligned the backend code and reference documentation with the live Supabase PostgreSQL database. Supabase is now treated as the source of truth for table and column names.
+
+### Database and Schema Findings
+
+- Confirmed that the live Supabase database is reachable through JDBC.
+- Confirmed all expected tables are individually reachable:
+  - `badges`
+  - `bottle_records`
+  - `coupons`
+  - `inout_logs`
+  - `points_ledger`
+  - `redemptions`
+  - `streaks`
+  - `user_badges`
+  - `users`
+- Confirmed `coupons` only has:
+  - `coupon_id`
+  - `coupon_name`
+  - `points_required`
+- Removed code assumptions for non-existent `coupons.description` and `coupons.coupon_type`.
+- Confirmed `users` uses `password_hash`, not `password`.
+- Confirmed `users` does not currently contain `name`, `course`, or `year_level`.
+- Confirmed `inout_logs` uses:
+  - `log_id`
+  - `user_id`
+  - `action`
+  - `performed_at`
+  - `ip_address`
+  - `notes`
+- Removed SQL assumptions around legacy in/out columns such as `event_type`, `entry_method`, `timestamp`, `staff_note`, and `status`.
+
+### Java Files Updated
+
+- `CouponDAO.java`
+  - Now inserts and maps only `coupon_name` and `points_required`.
+  - No longer reads or writes `description` or `coupon_type`.
+- `Coupon.java`
+  - Removed coupon description and coupon type fields.
+- `UserDAO.java`
+  - Registration now writes to `users.password_hash`.
+  - User mapping reads `password_hash`.
+  - Profile update now updates `username` only, because Supabase does not contain `name`, `course`, or `year_level`.
+- `InOutLogDAO.java`
+  - SQL now targets `action`, `performed_at`, and `notes`.
+  - Date filtering now uses `performed_at::date`.
+  - Duplicate checks now compare `action`.
+- `InOutLog.java`
+  - Updated to represent the Supabase-backed fields while keeping compatibility accessors for existing service code.
+- `RedemptionDAO.java`
+  - Redemption status values now use lowercase `pending` and `claimed`.
+- `ReportService.java`
+  - Removed references to missing `users.name`.
+  - Redemption report filters now use lowercase status values.
+- `WeeklyResetScheduler.java`
+  - Removed dependency on missing `system_config`.
+  - Last reset date is currently kept in memory during the application session.
+- `TestDatabaseConnection.java`
+  - Expanded from a basic connection test into a read-only Supabase diagnostics runner.
+  - It checks each table, prints column metadata, queries sample rows, and masks credentials in the printed JDBC URL.
+
+### SQL Reference Files Updated
+
+- `sql/00_create_core_schema_postgresql.sql`
+- `sql/01_create_inout_logs.sql`
+
+These files are kept as Supabase-aligned references. They are not the source of truth if they ever disagree with the live Supabase database.
+
+### Documentation Updated
+
+- `ISKOLLECT - System Architecture.docx`
+  - Updated from the older MySQL/Student/Reward/Transaction terminology to the current JavaFX + Java services/DAOs + JDBC + Supabase PostgreSQL architecture.
+  - Added the current Supabase tables, DAO/service mappings, diagnostics runner, known gaps, and revised workflows.
+  - A backup was saved as `ISKOLLECT - System Architecture.backup-20260610.docx`.
+- `README.md`
+  - Updated to reflect the current source tree, modules, Supabase schema notes, diagnostics runner, and known integration notes.
+- `SESSION_UPDATES.md`
+  - This section was added to document the new Supabase alignment work.
+
+### Current Live Data Observed
+
+- `coupons` contains 4 rows:
+  - School Supplies, 10 points
+  - Snack Voucher V1, 30 points
+  - Snack Voucher V2, 50 points
+  - Lunch Voucher, 100 points
+- `badges` contains 5 rows:
+  - Bronze, 5 points
+  - Silver, 10 points
+  - Emerald, 20 points
+  - Gold, 35 points
+  - Constellation, 50 points
+- Other checked tables were reachable but empty at the time of diagnostics.
+
+### Verification Performed
+
+The project was compiled and tested successfully after the changes:
+
+```bash
+mvn test
+```
+
+### Remaining Work
+
+- Replace `UserValidator` stub with real `UserDAO` validation for in/out logging.
+- Review the mismatch between badge bonus logic in Java and the larger bonus values currently stored in Supabase.
+- Decide whether profile fields such as course and year level should be added to Supabase or removed from the UI.
+- Add focused DAO/service integration tests against a test database.
+- Keep `resources/config.properties` out of public sharing because it contains database credentials.
+
 ## Session Scope
 
 The session implemented the PostgreSQL-oriented backend and controller scaffolding for the Iskollect bottle-based recycling rewards system. The work followed the provided SAD instructions while adapting the database layer to PostgreSQL instead of MySQL.
@@ -117,9 +230,11 @@ timestamp::date
 
 The table documentation was also adjusted away from MySQL-specific types such as `AUTO_INCREMENT` and `DATETIME`.
 
-### `InOutServiceTest.java`
+### `InOutServiceTest.java` (Removed)
 
-Fixed the package declaration from:
+This was an earlier empty test placeholder. It has since been deleted along with its test folder because it had no active test coverage or use.
+
+Earlier in the project, its package declaration had been fixed from:
 
 ```java
 package test.com.iskollect;
